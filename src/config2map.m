@@ -13,6 +13,7 @@
 % Returns:
 %     java.util.Map of flattened configuration entries
     
+% Copyright (c) 2013 Physion Consulting LLC
 
 function m = config2map(xmlPath, deviceName)
     import ovation.*;

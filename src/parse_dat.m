@@ -1,3 +1,14 @@
+% Parses a Fenton lab .dat header
+%
+% Parameters
+%   dataPath : string
+%     Path to .dat file
+%   prefix : string
+%     Parameter prefix
+
+
+% Copyright (c) 2013 Physion Consulting LLC
+
 function [csvPath, epochInfo, protocolParameters] = parse_dat(datPath, prefix)
     
     fid = fopen(datPath, 'r');
