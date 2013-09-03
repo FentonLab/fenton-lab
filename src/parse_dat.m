@@ -1,14 +1,3 @@
-% Parses a Fenton lab .dat header
-%
-% Parameters
-%   dataPath : string
-%     Path to .dat file
-%   prefix : string
-%     Parameter prefix
-
-
-% Copyright (c) 2013 Physion Consulting LLC
-
 function [csvPath, epochInfo, protocolParameters] = parse_dat(datPath, prefix)
     
     fid = fopen(datPath, 'r');
@@ -78,19 +67,47 @@ function [csvPath, epochInfo, protocolParameters] = parse_dat(datPath, prefix)
                 elseif inSetupInformation
                     protocolParameters.put(java.lang.String([prefix '.' c{1}]), c{2});
                 elseif inRecordFormat
-                    columns = strsplit(c{2});
-                    fprintf(fid2, '%s\n', strjoin(columns,','));
+                    %% NB: These comments need to be removed when upgrading to R2013 or beyond
+%                     if(verLessThan('matlab', '8.1'))
+                        columns = strsplit(' ', c{2});
+%                     else
+%                         columns = strsplit(c{2});
+%                     end
+                    
+%                     if(verLessThan('matlab', '8.1'))
+                        fprintf(fid2, '%s\n', strjoin_legacy(columns,','));
+%                     else
+%                         fprintf(fid2, '%s\n', strjoin(columns,','));
+%                     end
                 end
             end
         end
         
         % Write records as CSV to temporary file
         if ~inHeader && ~strcmp(line, '%%END_HEADER')
-            csv = strjoin(strsplit(line), ',');
+%             if(verLessThan('matlab', '8.1'))
+                csv = strjoin_legacy(strsplit('	', line), ',');
+%             else
+%                 csv = strjoin(strsplit(line), ',');
+%             end
+            
             fprintf(fid2, '%s\n', csv);
         end
         
         line = fgetl(fid);
     end
     
+end
+
+function result = strjoin_legacy(cols, delimiter)
+    result = [];
+    for c = cols
+        if isempty(result)
+            result = c;
+        else
+            result = [result delimiter c]; %#ok<AGROW>
+        end
+    end
+    
+    result = cell2mat(result);
 end

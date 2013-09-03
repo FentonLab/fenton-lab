@@ -53,8 +53,6 @@
 % Returns:
 %     Newly inserted Epoch instance
 
-% Copyright (c) 2013 Physion Consulting LLC
-
 function epoch = import_fenton_dat(source, container, protocol,...
         arenaDeviceName,...
         arenaImageDeviceName,...
@@ -78,9 +76,16 @@ function epoch = import_fenton_dat(source, container, protocol,...
     epochInfo = arenaEpochInfo;
     
     % Parse Epoch start time from Date.0 and Time.0
-    dateComps = strsplit(epochInfo.get('Date.0'),'.');
-    timeSplit = strsplit(epochInfo.get('Time.0'));
-    timeComps = strsplit(timeSplit{1},':');
+    %% NB: These comments need to be removed when upgrading to R2013 or beyond
+%     if(verLessThan('matlab', '8.1'))
+        dateComps = strsplit('.', epochInfo.get('Date.0'));
+        timeSplit = strsplit(' ', epochInfo.get('Time.0'));
+        timeComps = strsplit(':', timeSplit{1});
+%     else
+%         dateComps = strsplit(epochInfo.get('Date.0'),'.');
+%         timeSplit = strsplit(epochInfo.get('Time.0'));
+%         timeComps = strsplit(timeSplit{1},':');
+%     end
     ampm = timeSplit{2};
     hour = str2double(timeComps{1});
     minute = str2double(timeComps{2});
