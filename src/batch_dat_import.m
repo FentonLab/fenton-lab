@@ -89,7 +89,7 @@ function epochsMap = batch_dat_import(context,...
         
         group = groups.get(trial.group);
         
-        disp(['  Trial ' trial.roomFile '/' trial.arenaFile '...']);
+        disp(['  Trial ' num2str(i) ' ' trial.roomFile '/' trial.arenaFile '...']);
         
         disp(['    ' fullfile(datFilesFolder, [trial.arenaFile '.dat'])]);
         disp(['    ' fullfile(datFilesFolder, [trial.roomFile '.dat'])]);
