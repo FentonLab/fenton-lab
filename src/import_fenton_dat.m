@@ -64,32 +64,54 @@ function epoch = import_fenton_dat(source, container, protocol,...
     
     import ovation.*;
     
-    [arenaCsvPath, arenaEpochInfo, arenaProtocolParameters] = parse_dat(arenaFrameDatPath, 'ArenaFrame');
-    [roomCsvPath, roomEpochInfo, roomProtocolParameters ] = parse_dat(roomFrameDatPath, 'RoomFrame');
+    arenaFrameExists = java.io.File(arenaFrameDatPath).exists();
+    roomFrameExists = java.io.File(roomFrameDatPath).exists();
+    
+    if(arenaFrameExists)
+        [arenaCsvPath, arenaEpochInfo, arenaProtocolParameters] = parse_dat(arenaFrameDatPath, 'ArenaFrame');
+    else
+        arenaProtocolParameters = java.util.HashMap();
+    end
+    
+    if(roomFrameExists)
+        [roomCsvPath, roomEpochInfo, roomProtocolParameters ] = parse_dat(roomFrameDatPath, 'RoomFrame');
+    else
+        roomProtocolParameters = java.util.HashMap();
+    end
     
     protocolParameters = arenaProtocolParameters;
     protocolParameters.putAll(roomProtocolParameters);
     
-    assert(arenaEpochInfo.equals(roomEpochInfo),...
-        'Room and Arena DATABASE_INFORMATION do not match. Perhaps these files were not acquired simultaneously?');
+    if(arenaFrameExists && roomFrameExists)
+        assert(arenaEpochInfo.equals(roomEpochInfo),...
+            'Room and Arena DATABASE_INFORMATION do not match. Perhaps these files were not acquired simultaneously?');
+    end
+
+    assert(arenaFrameExists || roomFrameExists,...
+        'Neither Room nor Arena files found');
     
-    epochInfo = arenaEpochInfo;
+    if(arenaFrameExists)
+        epochInfo = arenaEpochInfo;
+    elseif(roomFrameExists)
+        epochInfo = roomEpochInfo;
+    end
+        
     
     % Parse Epoch start time from Date.0 and Time.0
     %% NB: These comments need to be removed when upgrading to R2013 or beyond
-%     if(verLessThan('matlab', '8.1'))
-        dateComps = strsplit('.', epochInfo.get('Date.0'));
-        timeSplit = strsplit(' ', epochInfo.get('Time.0'));
-        timeComps = strsplit(':', timeSplit{1});
-%     else
-%         dateComps = strsplit(epochInfo.get('Date.0'),'.');
-%         timeSplit = strsplit(epochInfo.get('Time.0'));
-%         timeComps = strsplit(timeSplit{1},':');
-%     end
+    %     if(verLessThan('matlab', '8.1'))
+    dateComps = strsplit('.', epochInfo.get('Date.0'));
+    timeSplit = strsplit(' ', epochInfo.get('Time.0'));
+    timeComps = strsplit(':', timeSplit{1});
+    %     else
+    %         dateComps = strsplit(epochInfo.get('Date.0'),'.');
+    %         timeSplit = strsplit(epochInfo.get('Time.0'));
+    %         timeComps = strsplit(timeSplit{1},':');
+    %     end
     ampm = timeSplit{2};
     hour = str2double(timeComps{1});
     minute = str2double(timeComps{2});
-    if(strcmp(ampm, 'PM'))
+    if(strcmp(ampm, 'PM') && hour < 12)
         hour = hour + 12;
     end
     
@@ -117,40 +139,47 @@ function epoch = import_fenton_dat(source, container, protocol,...
         );
     
     
-    % Add a CSV measurement for the ArenaFrame
-    disp('Inserting ArenaFrame CSV measurement...');
-    epoch.insertMeasurement(protocolParameters.get('ArenaFrame.Frame.0'),...
-        array2set({'subject'}),...
-        array2set({arenaDeviceName}),...
-        java.io.File(arenaCsvPath).toURI().toURL(),...
-        'application/csv');
+    if(arenaFrameExists)
+        % Add a CSV measurement for the ArenaFrame
+        disp('Inserting ArenaFrame CSV measurement...');
+        epoch.insertMeasurement(protocolParameters.get('ArenaFrame.Frame.0'),...
+            array2set({'subject'}),...
+            array2set({arenaDeviceName}),...
+            java.io.File(arenaCsvPath).toURI().toURL(),...
+            'application/csv');
+        
+        if(java.io.File(arenaFrameImagePath).exists())
+            disp('Inserting ArenaFrame image measurement...');
+            epoch.insertMeasurement([char(protocolParameters.get('ArenaFrame.Frame.0')) ' Image'],...
+                array2set({'subject'}),...
+                array2set({arenaImageDeviceName}),...
+                java.io.File(arenaFrameImagePath).toURI().toURL(),...
+                imageContentType);
+        end
+        delete(arenaCsvPath);
+    end
     
-    % Add measurements for room and arena-frame images
-    disp('Inserting ArenaFrame image measurement...');
-    epoch.insertMeasurement([char(protocolParameters.get('ArenaFrame.Frame.0')) ' Image'],...
-        array2set({'subject'}),...
-        array2set({arenaImageDeviceName}),...
-        java.io.File(arenaFrameImagePath).toURI().toURL(),...
-        imageContentType);
+    if(roomFrameExists)
+        % Add a CSV measurement for the RoomFrame
+        disp('Inserting RoomFrame CSV measurement...');
+        epoch.insertMeasurement(protocolParameters.get('RoomFrame.Frame.0'),...
+            array2set({'subject'}),...
+            array2set({arenaDeviceName}),...
+            java.io.File(roomCsvPath).toURI().toURL(),...
+            'application/csv');
+        
+        
+        if(java.io.File(roomFrameImagePath).exists())
+            disp('Inserting RoomFrame image measurement...');
+            epoch.insertMeasurement([char(protocolParameters.get('RoomFrame.Frame.0')) ' Image'],...
+                array2set({'subject'}),...
+                array2set({arenaImageDeviceName}),...
+                java.io.File(roomFrameImagePath).toURI().toURL(),...
+                imageContentType);
+        end
+        delete(roomCsvPath);
+    end
     
-    % Add a CSV measurement for the RoomFrame
-    disp('Inserting RoomFrame CSV measurement...');
-    epoch.insertMeasurement(protocolParameters.get('RoomFrame.Frame.0'),...
-        array2set({'subject'}),...
-        array2set({arenaDeviceName}),...
-        java.io.File(roomCsvPath).toURI().toURL(),...
-        'application/csv');
-    
-    
-    disp('Inserting RoomFrame image measurement...');
-    epoch.insertMeasurement([char(protocolParameters.get('RoomFrame.Frame.0')) ' Image'],...
-        array2set({'subject'}),...
-        array2set({arenaImageDeviceName}),...
-        java.io.File(roomFrameImagePath).toURI().toURL(),...
-        imageContentType);
-    
-    delete(arenaCsvPath);
-    delete(roomCsvPath);
     
     disp('Waiting for all cloud uploads to finish...');
     epoch.getDataContext().getFileService().waitForPendingUploads(60, java.util.concurrent.TimeUnit.MINUTES);
