@@ -91,5 +91,16 @@ egroup = ctx.getObjectWithURI('ovation://03d83127-4ac1-4ec0-8272-1e310c527376/')
 
 epochsMap = batch_dat_import(ctx, egroup, protocols, 'America/New_York', designFile, '/Users/barry/development/fenton-lab/test/fixtures/batch/DATfiles');
 
-        
+tblFile = '/Users/barry/development/fenton-lab/test/fixtures/batch/fmr1.xlsx';
+psFiles = '/Users/barry/development/fenton-lab/test/fixtures/batch/PSfiles';
+analysisProtocol = ctx.getProtocol('fenton-analysis-protocol-demo');
+if(isempty(analysisProtocol))
+    analysisProtocol = ctx.insertProtocol('fenton-analysis-protocol-demo',...
+        'Automated analysis',...
+        'analysis_entry_function',... %TODO which function?
+        'https://github.com/FentonLab/analysis-code',... %TODO which repository?
+        'TBD');
+end% TODO what version?
+
+batch_analysis_import(epochsMap, tblFile, psFiles, analysisProtocol, analysisParameters);
 

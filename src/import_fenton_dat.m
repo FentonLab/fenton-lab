@@ -182,7 +182,7 @@ function epoch = import_fenton_dat(source, container, protocol,...
     
     
     disp('Waiting for all cloud uploads to finish...');
-    epoch.getDataContext().getFileService().waitForPendingUploads(60, java.util.concurrent.TimeUnit.MINUTES);
+    wait_for_pending_uploads(epoch.getDataContext());
     
 end
 

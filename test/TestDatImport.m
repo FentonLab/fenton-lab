@@ -35,5 +35,19 @@ classdef TestDatImport < MatlabTestCase
             assert(~isempty(epoch));
 
         end
+        
+        function testBatchImport(self)
+            protocols.Hab = 'Hab protocol';
+            protocols.Retest = 'Retest protocol';
+            protocols.Train1 = 'Train1 protocol';
+            protocols.Train2 = 'Train2 protocol';
+            protocols.Train3 = 'Train3 protocol';
+            
+            egroup = ctx.getObjectWithURI('ovation://03d83127-4ac1-4ec0-8272-1e310c527376/');
+            
+            epochsMap = batch_dat_import(ctx, egroup, protocols, 'America/New_York', designFile, '/Users/barry/development/fenton-lab/test/fixtures/batch/DATfiles');
+            
+            assert(epochsMap.size() == 20); % 2 per Epoch
+        end
     end
 end
