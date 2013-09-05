@@ -48,12 +48,13 @@ function batch_analysis_import(epochsMap,...
             % Create a temporary CSV file to hold the analysis results
             csvPath = tempname();
             fid = fopen(csvPath, 'w');
-            cleaner2 = onCleanup(@() fclose(fid)); % Always close fid when we leave scope
+            cleaner = onCleanup(@() fclose(fid)); % Always close fid when we leave scope
             
-            columns = tbl.textdata(1,:);
-            values = tbl.textdata(i,:);
+            columns = tbl.textdata(1,2:end-1);
+            values = tbl.data(i-(FIRST_ROW-1),:);
             fprintf(fid, '%s\n', strjoin(columns, ','));
-            fprintf(fid, '%s\n', strjoin(values, ','));
+            dlmwrite(csvPath, values, '-append', 'delimiter', ',');
+%             fprintf(fid, '%s\n', strjoin(values, ','));
             
             analysisRecord.addOutput('results',...
                 File(csvPath).toURL(),...
