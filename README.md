@@ -17,6 +17,12 @@ This package provides two entry functions:
 
 ## Usage
 
+This package assumes a standard "Design File" and "Tbl File" format. Examples of these files are 
+shown in `test/fixtures/OnedayProtocolLogSheet.xlsx` (design file) and `test/fixtures/batch/fmr1.xlsx` (tbl file). Both files must be in Excel XML (`xlsx`) format.
+
+The output of `batch_dat_import` is a dictionary of Ovation `Epochs`, keyed by the .dat file(s) they reference. The `batch_analysis_import` uses this dictionary of Epochs to find the correct Epoch for attaching a new `AnalysisRecord` containing the summary statistics and PostScript file(s).
+
+The `example_import.m` script file shows usage of the `batch_dat_import` and `batch_analysis_import` for the test fixture contained with the project.
 
 ## License
 
